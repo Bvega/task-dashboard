@@ -1,94 +1,114 @@
-// This is our first real component!
-// It takes a task object and displays it nicely
+interface Task {
+  id: string;
+  title: string;
+  description: string;
+  status: 'todo' | 'in-progress' | 'completed';
+  priority: 'low' | 'medium' | 'high';
+  createdAt: Date;
+}
 
-function TaskItem({ task, onToggleStatus, onDelete }) {
-  // This function determines what color to use based on priority
-  const getPriorityColor = (priority) => {
+interface TaskItemProps {
+  task: Task;
+  onToggleStatus: (taskId: string) => void;
+  onDelete: (taskId: string) => void;
+}
+
+function TaskItem({ task, onToggleStatus, onDelete }: TaskItemProps) {
+  const formatDate = (date: Date) => {
+    return new Intl.DateTimeFormat('en-US', {
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric'
+    }).format(date);
+  };
+
+  const getPriorityColor = (priority: string) => {
     switch (priority) {
-      case 'high': return 'border-red-500 bg-red-50';
-      case 'medium': return 'border-yellow-500 bg-yellow-50';
-      case 'low': return 'border-green-500 bg-green-50';
-      default: return 'border-gray-500 bg-gray-50';
+      case 'high': return 'border-red-500';
+      case 'medium': return 'border-yellow-500';
+      case 'low': return 'border-green-500';
+      default: return 'border-gray-300';
     }
   };
 
-  // This function determines what to show for each status
-  const getStatusDisplay = (status) => {
+  const getPriorityBadgeColor = (priority: string) => {
+    switch (priority) {
+      case 'high': return 'bg-red-100 text-red-800';
+      case 'medium': return 'bg-yellow-100 text-yellow-800';
+      case 'low': return 'bg-green-100 text-green-800';
+      default: return 'bg-gray-100 text-gray-800';
+    }
+  };
+
+  const getStatusColor = (status: string) => {
     switch (status) {
-      case 'completed': return '✅ Completed';
-      case 'in-progress': return '🔄 In Progress';
-      case 'todo': return '📋 To Do';
+      case 'completed': return 'bg-green-100 text-green-800';
+      case 'in-progress': return 'bg-yellow-100 text-yellow-800';
+      case 'todo': return 'bg-blue-100 text-blue-800';
+      default: return 'bg-gray-100 text-gray-800';
+    }
+  };
+
+  const getStatusDisplay = (status: string) => {
+    switch (status) {
+      case 'completed': return 'Completed';
+      case 'in-progress': return 'In Progress';
+      case 'todo': return 'To Do';
       default: return status;
     }
   };
 
+  // Check if task is completed for styling
+  const isCompleted = task.status === 'completed';
+
   return (
-    <div className={`
-      p-4 rounded-lg border-l-4 shadow-sm bg-white mb-3
-      ${getPriorityColor(task.priority)}
-      ${task.status === 'completed' ? 'opacity-75' : ''}
-      hover:shadow-md transition-shadow duration-200
-    `}>
-      {/* Task header with title and priority */}
-      <div className="flex justify-between items-start mb-2">
-        <h3 className={`
-          font-semibold text-lg text-gray-900
-          ${task.status === 'completed' ? 'line-through text-gray-500' : ''}
-        `}>
+    <div className={`bg-white rounded-lg shadow-md p-6 border-l-4 ${getPriorityColor(task.priority)} 
+                     transition-all duration-300 hover:shadow-lg ${isCompleted ? 'opacity-80' : ''}`}>
+      {/* Header with title and priority */}
+      <div className="flex justify-between items-start mb-3">
+        <h3 className={`text-xl font-semibold text-gray-800 ${isCompleted ? 'line-through' : ''}`}>
           {task.title}
         </h3>
-        
-        <span className={`
-          px-2 py-1 text-xs font-medium rounded-full
-          ${task.priority === 'high' ? 'bg-red-100 text-red-800' : ''}
-          ${task.priority === 'medium' ? 'bg-yellow-100 text-yellow-800' : ''}
-          ${task.priority === 'low' ? 'bg-green-100 text-green-800' : ''}
-        `}>
+        <span className={`px-2 py-1 rounded text-xs font-medium ${getPriorityBadgeColor(task.priority)}`}>
           {task.priority}
         </span>
       </div>
 
-      {/* Task description */}
-      <p className={`
-        text-gray-600 mb-3
-        ${task.status === 'completed' ? 'line-through' : ''}
-      `}>
+      {/* Description */}
+      <p className={`text-gray-600 mb-4 ${isCompleted ? 'line-through opacity-70' : ''}`}>
         {task.description}
       </p>
 
-      {/* Status and actions */}
-      <div className="flex justify-between items-center">
-        <span className={`
-          px-3 py-1 rounded-full text-sm font-medium
-          ${task.status === 'completed' ? 'bg-green-100 text-green-800' : ''}
-          ${task.status === 'in-progress' ? 'bg-yellow-100 text-yellow-800' : ''}
-          ${task.status === 'todo' ? 'bg-blue-100 text-blue-800' : ''}
-        `}>
-          {getStatusDisplay(task.status)}
+      {/* Status and Date */}
+      <div className="flex justify-between items-center mb-4">
+        <span className={`px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(task.status)}`}>
+          {isCompleted ? '✅' : '📋'} {getStatusDisplay(task.status)}
         </span>
-
-        <div className="flex gap-2">
-          <button
-            onClick={() => onToggleStatus(task.id)}
-            className="px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600 
-                       transition-colors duration-200 text-sm"
-          >
-            {task.status === 'completed' ? 'Undo' : 'Complete'}
-          </button>
-          
-          <button
-            onClick={() => onDelete(task.id)}
-            className="px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600 
-                       transition-colors duration-200 text-sm"
-          >
-            Delete
-          </button>
-        </div>
+        <span className="text-sm text-gray-500">
+          Created: {formatDate(task.createdAt)}
+        </span>
       </div>
 
-      {/* Creation date */}
-      <div className="mt-2 text-xs text-gray-500">
-        Created: {task.createdAt.toLocaleDateString()}
+      {/* Action Buttons */}
+      <div className="flex gap-3">
+        <button
+          onClick={() => onToggleStatus(task.id)}
+          className={`px-4 py-2 rounded-lg font-medium transition-colors duration-200 ${
+            task.status === 'completed'
+              ? 'bg-blue-500 hover:bg-blue-600 text-white'
+              : 'bg-green-500 hover:bg-green-600 text-white'
+          }`}
+        >
+          {task.status === 'completed' ? 'Undo' : 'Complete'}
+        </button>
+        
+        <button
+          onClick={() => onDelete(task.id)}
+          className="px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg font-medium 
+                     transition-colors duration-200"
+        >
+          Delete
+        </button>
       </div>
     </div>
   );
